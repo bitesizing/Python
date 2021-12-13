@@ -1,6 +1,6 @@
 import random
 import sys
-# import time
+import time
 
 # init functions
 def print_board_from_array(inp_grid): # turns an array of 9 digits into an ASCII board
@@ -94,29 +94,28 @@ def start(inp_grid, inp_possible_moves): # main function for the code. takes in 
         current_possible_moves.remove(current_input)
 
         # print board from new grid
+        time.sleep(sleep_time)
         print_board_from_array(current_grid)
         check_for_end()
 
     def calc_win():
-        print(current_grid)
 
-        for x in range(8):
-            current_count_X = 0
-            # print("RESET X: " + str(current_count_X))
-            current_count_O = 0
-            # print("RESET O: " + str(current_count_O))
-            for y in win_con_array[x][:]:
-                if y == 1 == current_grid[y]:
-                    current_count_X += 1
-                    # print(current_count_X)
-                if -y == -1 == current_grid[y]:
-                    current_count_O += 1
-                    # print(current_count_O)
+        for x in range(8): # cycles through each of the rows in the win_con_array (aka each win condition)
+            win_counter_X = 0
+            win_counter_O = 0
 
-            if current_count_X == 3:
-                return "X"
-            if current_count_O == 3:
-                return "O"
+            for y in range(9): # cycles through each square in the grid
+                if current_grid[y] == win_con_array[x][y] == 1:
+                    win_counter_X += 1
+
+                    if win_counter_X == 3: # returns wincon as soon as three Xs are found in the right positions
+                        return "X"
+
+                if current_grid[y] == -win_con_array[x][y] == -1:
+                    win_counter_O += 1
+
+                    if win_counter_O == 3: # returns wincon as soon as three Xs are found in the right positions
+                        return "O"
 
         return None
 
@@ -195,12 +194,12 @@ win_con_array = [
     [0, 1, 0, 0, 1, 0, 0, 1, 0],
     [0, 0, 1, 0, 0, 1, 0, 0, 1],
     [1, 0, 0, 0, 1, 0, 0, 0, 1],
-    [0, 0, 1, 0, 1, 0, 1, 0, 0]]
+    [0, 0, 1, 0, 1, 0, 1, 0, 0]] # array of all the possible win-conditions for a player.
 
 # change these variables to change the modes
-two_player = True
-player_move_to_start = False # only relevant in matches against the AI.
-starting_sign = 1 # set to 1 to start with X, or to -1 to start with O.
+two_player = False
+player_move_to_start = True # only relevant in matches against the AI.
+starting_sign = -1 # set to 1 to start with X, or to -1 to start with O.
 
 # prints the instructions for the game
 if two_player:
