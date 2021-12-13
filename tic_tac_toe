@@ -83,39 +83,80 @@ def start(inp_grid, inp_possible_moves): # main function for the code. takes in 
 
     def gen_AI_move(first_to_move):
 
+        def gen_random_move():
+            current_input = random.choice(current_possible_moves)
+            current_grid[current_input] = current_sign
+            current_possible_moves.remove(current_input)
+
+        def gen_intermediate_move():
+            winning_moves = []
+            surviving_moves = []
+
+            for y in current_possible_moves:
+                current_input = y
+                temp_grid = current_grid.copy()
+
+                temp_grid[current_input] = current_sign  # simulates each move
+                if calc_win(temp_grid) == current_sign: # calc winning moves (works fine)
+                    winning_moves.append(current_input)
+
+                temp_grid[current_input] = -current_sign
+                if calc_win(temp_grid) == -current_sign: # calc surviving moves (currently returns empty)
+                    surviving_moves.append(current_input)
+
+            # print("The moves needed for the AI to win are " + str(winning_moves))
+            # print("The moves needed for the AI not to lose " + str(surviving_moves))
+            # print("\n")
+
+            if winning_moves:
+                current_input = random.choice(winning_moves)
+                current_grid[current_input] = current_sign
+                current_possible_moves.remove(current_input)
+            elif surviving_moves:
+                current_input = random.choice(surviving_moves)
+                current_grid[current_input] = current_sign
+                current_possible_moves.remove(current_input)
+            else:
+                gen_random_move()
+
+
         if first_to_move:
             current_sign = starting_sign
         else:
             current_sign = flip_sign(starting_sign)
 
         # generates the move of the AI
-        current_input = random.choice(current_possible_moves)
-        current_grid[current_input] = current_sign
-        current_possible_moves.remove(current_input)
+        if AI_difficulty == 0:
+            gen_random_move()
+        elif AI_difficulty == 1:
+            gen_intermediate_move()
+        else:
+            print ("your AI difficulty is not set to an acceptable value!")
+            sys.exit()
 
         # print board from new grid
         time.sleep(sleep_time)
         print_board_from_array(current_grid)
         check_for_end()
 
-    def calc_win():
+    def calc_win(inp_grid): # calculates if X or O has won the game
 
         for x in range(8): # cycles through each of the rows in the win_con_array (aka each win condition)
             win_counter_X = 0
             win_counter_O = 0
 
             for y in range(9): # cycles through each square in the grid
-                if current_grid[y] == win_con_array[x][y] == 1:
+                if inp_grid[y] == win_con_array[x][y] == 1:
                     win_counter_X += 1
 
                     if win_counter_X == 3: # returns wincon as soon as three Xs are found in the right positions
-                        return "X"
+                        return 1
 
-                if current_grid[y] == -win_con_array[x][y] == -1:
+                if inp_grid[y] == -win_con_array[x][y] == -1:
                     win_counter_O += 1
 
                     if win_counter_O == 3: # returns wincon as soon as three Xs are found in the right positions
-                        return "O"
+                        return -1
 
         return None
 
@@ -124,7 +165,12 @@ def start(inp_grid, inp_possible_moves): # main function for the code. takes in 
     def check_for_end():
 
         def return_win(sign):
-            print("Congrats to " + sign + " for winning!")
+            if sign == 1:
+                value = "X"
+            else:
+                value = "O"
+
+            print("Congrats to " + value + " for winning!")
             query_new_game()
 
         def query_new_game():
@@ -147,7 +193,7 @@ def start(inp_grid, inp_possible_moves): # main function for the code. takes in 
                 sys.exit()
 
         # RUNS THE CODE (check_for_end)
-        win_value = calc_win()
+        win_value = calc_win(current_grid)
         if win_value is not None:
             return_win(win_value)
 
@@ -160,17 +206,23 @@ def start(inp_grid, inp_possible_moves): # main function for the code. takes in 
     current_possible_moves = inp_possible_moves.copy()
 
     if two_player:
+        print("It is player 1's turn:")
         gen_user_move(True)
+        print("It is player 2's turn:")
         gen_user_move(False)
         start(current_grid, current_possible_moves)
 
     elif player_move_to_start:
+        print("It is the player's turn:")
         gen_user_move(True)
+        print("It is the AI's turn:")
         gen_AI_move(False)
         start(current_grid, current_possible_moves)
 
     else:
+        print("It is the AI's turn:")
         gen_AI_move(True)
+        print("It is the player's turn:")
         gen_user_move(False)
         start(current_grid, current_possible_moves)
 
@@ -198,8 +250,9 @@ win_con_array = [
 
 # change these variables to change the modes
 two_player = False
-player_move_to_start = True # only relevant in matches against the AI.
+player_move_to_start = False # only relevant in matches against the AI.
 starting_sign = -1 # set to 1 to start with X, or to -1 to start with O.
+AI_difficulty = 1 # set to 0 for novice, 1 for intermediate, 2 for expert (unbeatable)
 
 # prints the instructions for the game
 if two_player:
