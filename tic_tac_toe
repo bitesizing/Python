@@ -29,7 +29,7 @@ def print_board_from_array(inp_grid): # turns an array of 9 digits into an ASCII
 
     print(board)
 
-def start(inp_grid, inp_possible_moves): # main function for the code. takes in user response, prints board, takes in AI response, prints board, and calls itself.
+def start(inp_grid, inp_possible_moves, inp_turn_count): # main function for the code. takes in user response, prints board, takes in AI response, prints board, and calls itself.
 
     def take_input():
         reference_moves = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
@@ -71,7 +71,7 @@ def start(inp_grid, inp_possible_moves): # main function for the code. takes in 
         # check if place in grid already has a value assigned
         if current_grid[current_input] != 0:
             print("Someone's already made that move:/. Pick again:")
-            start(current_grid, current_possible_moves)
+            start(current_grid, current_possible_moves, inp_turn_count)
 
         else: # if not, add value to grid
             current_grid[current_input] = current_sign
@@ -88,7 +88,7 @@ def start(inp_grid, inp_possible_moves): # main function for the code. takes in 
             current_grid[current_input] = current_sign
             current_possible_moves.remove(current_input)
 
-        def gen_intermediate_move():
+        def gen_good_move(expert_check = False):
             winning_moves = []
             surviving_moves = []
 
@@ -116,6 +116,11 @@ def start(inp_grid, inp_possible_moves): # main function for the code. takes in 
                 current_input = random.choice(surviving_moves)
                 current_grid[current_input] = current_sign
                 current_possible_moves.remove(current_input)
+            elif expert_check:
+                current_input = random.choice(corner_moves)
+                current_grid[current_input] = current_sign
+                current_possible_moves.remove(current_input)
+
             else:
                 gen_random_move()
 
@@ -129,7 +134,9 @@ def start(inp_grid, inp_possible_moves): # main function for the code. takes in 
         if AI_difficulty == 0:
             gen_random_move()
         elif AI_difficulty == 1:
-            gen_intermediate_move()
+            gen_good_move()
+        elif AI_difficulty == 2:
+            gen_good_move(True)
         else:
             print ("your AI difficulty is not set to an acceptable value!")
             sys.exit()
@@ -186,7 +193,7 @@ def start(inp_grid, inp_possible_moves): # main function for the code. takes in 
 
             if user_input == "Y" or user_input == "y":
                 print_board_from_array(grid)
-                start(grid, possible_moves)
+                start(grid, possible_moves, inp_turn_count)
 
             elif user_input == "N" or user_input == "n":
                 print("Thanks for playing!")
@@ -210,21 +217,27 @@ def start(inp_grid, inp_possible_moves): # main function for the code. takes in 
         gen_user_move(True)
         print("It is player 2's turn:")
         gen_user_move(False)
-        start(current_grid, current_possible_moves)
+
+        inp_turn_count += 1
+        start(current_grid, current_possible_moves, inp_turn_count)
 
     elif player_move_to_start:
         print("It is the player's turn:")
         gen_user_move(True)
         print("It is the AI's turn:")
         gen_AI_move(False)
-        start(current_grid, current_possible_moves)
+
+        inp_turn_count += 1
+        start(current_grid, current_possible_moves, inp_turn_count)
 
     else:
         print("It is the AI's turn:")
         gen_AI_move(True)
         print("It is the player's turn:")
         gen_user_move(False)
-        start(current_grid, current_possible_moves)
+
+        inp_turn_count += 1
+        start(current_grid, current_possible_moves, inp_turn_count)
 
 
 ######## RUNS THE CODE ########
@@ -232,6 +245,8 @@ def start(inp_grid, inp_possible_moves): # main function for the code. takes in 
 # init variables
 sleep_time = 0.7
 possible_moves = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+corner_moves = [0, 2, 4, 6, 8]
+centre_move = 4
 
 grid = [
     0, 0, 0,
@@ -248,9 +263,11 @@ win_con_array = [
     [1, 0, 0, 0, 1, 0, 0, 0, 1],
     [0, 0, 1, 0, 1, 0, 1, 0, 0]] # array of all the possible win-conditions for a player.
 
+turn_count = 0
+
 # change these variables to change the modes
 two_player = False
-player_move_to_start = False # only relevant in matches against the AI.
+player_move_to_start = True # only relevant in matches against the AI.
 starting_sign = -1 # set to 1 to start with X, or to -1 to start with O.
 AI_difficulty = 1 # set to 0 for novice, 1 for intermediate, 2 for expert (unbeatable)
 
@@ -272,4 +289,4 @@ print("\n")
 print_board_from_array(grid)
 
 # run the main function of code. Recall until a player wins
-start(grid, possible_moves)
+start(grid, possible_moves, turn_count)
