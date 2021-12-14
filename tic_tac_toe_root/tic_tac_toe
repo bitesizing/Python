@@ -1,0 +1,292 @@
+import random
+import sys
+import time
+
+# init functions
+def print_board_from_array(inp_grid): # turns an array of 9 digits into an ASCII board
+    count = 0
+    board = ""
+
+    null_value = "---"
+    O_value = "-O-"
+    X_value = "-X-"
+
+    for x in inp_grid:
+        if x == 1:
+            board = board + X_value
+        elif x == -1:
+            board = board + O_value
+        else:
+            board = board + null_value
+
+        # breaks values up with | - goes onto a new line instead after every 3.
+        if count%3 == 2:
+            board = board + "\n"
+        else:
+            board = board + "|"
+
+        count += 1
+
+    print(board)
+
+def start(inp_grid, inp_possible_moves, inp_turn_count): # main function for the code. takes in user response, prints board, takes in AI response, prints board, and calls itself.
+
+    def take_input():
+        reference_moves = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        user_input = input()
+        if user_input == "end":
+            sys.exit()
+
+        elif user_input not in reference_moves:
+            print ("That's not a legal input:/. Make sure to use the numpad and try again:")
+            take_input()
+
+        else:
+            return user_input
+
+    def flip_sign(flip):
+        if flip == 1:
+            return -1
+        if flip == -1:
+            return 1
+
+        print("Turn not equal to 1 or -1. Exiting code")
+        sys.exit()
+
+    # generates the user's move
+    def gen_user_move(first_to_move):
+        if first_to_move:
+            current_sign = starting_sign
+        else:
+            current_sign = flip_sign(starting_sign)
+
+
+        # takes in user's move
+        current_input = int(take_input())
+
+        # convert user move from NUMKEY value to location in grid
+        conversion_array = [7, 8, 9, 4, 5, 6, 1, 2, 3]
+        current_input = conversion_array.index(int(current_input))
+
+        # check if place in grid already has a value assigned
+        if current_grid[current_input] != 0:
+            print("Someone's already made that move:/. Pick again:")
+            start(current_grid, current_possible_moves, inp_turn_count)
+
+        else: # if not, add value to grid
+            current_grid[current_input] = current_sign
+            current_possible_moves.remove(current_input) # removes played value from the list of possible moves
+
+        # print board from new grid
+        print_board_from_array(current_grid)
+        check_for_end()
+
+    def gen_AI_move(first_to_move):
+
+        def gen_random_move():
+            current_input = random.choice(current_possible_moves)
+            current_grid[current_input] = current_sign
+            current_possible_moves.remove(current_input)
+
+        def gen_good_move(expert_check = False):
+            winning_moves = []
+            surviving_moves = []
+
+            for y in current_possible_moves:
+                current_input = y
+                temp_grid = current_grid.copy()
+
+                temp_grid[current_input] = current_sign  # simulates each move
+                if calc_win(temp_grid) == current_sign: # calc winning moves (works fine)
+                    winning_moves.append(current_input)
+
+                temp_grid[current_input] = -current_sign
+                if calc_win(temp_grid) == -current_sign: # calc surviving moves (currently returns empty)
+                    surviving_moves.append(current_input)
+
+            # print("The moves needed for the AI to win are " + str(winning_moves))
+            # print("The moves needed for the AI not to lose " + str(surviving_moves))
+            # print("\n")
+
+            if winning_moves:
+                current_input = random.choice(winning_moves)
+                current_grid[current_input] = current_sign
+                current_possible_moves.remove(current_input)
+            elif surviving_moves:
+                current_input = random.choice(surviving_moves)
+                current_grid[current_input] = current_sign
+                current_possible_moves.remove(current_input)
+            elif expert_check:
+                current_input = random.choice(corner_moves)
+                current_grid[current_input] = current_sign
+                current_possible_moves.remove(current_input)
+
+            else:
+                gen_random_move()
+
+
+        if first_to_move:
+            current_sign = starting_sign
+        else:
+            current_sign = flip_sign(starting_sign)
+
+        # generates the move of the AI
+        if AI_difficulty == 0:
+            gen_random_move()
+        elif AI_difficulty == 1:
+            gen_good_move()
+        elif AI_difficulty == 2:
+            gen_good_move(True)
+        else:
+            print ("your AI difficulty is not set to an acceptable value!")
+            sys.exit()
+
+        # print board from new grid
+        time.sleep(sleep_time)
+        print_board_from_array(current_grid)
+        check_for_end()
+
+    def calc_win(inp_grid): # calculates if X or O has won the game
+
+        for x in range(8): # cycles through each of the rows in the win_con_array (aka each win condition)
+            win_counter_X = 0
+            win_counter_O = 0
+
+            for y in range(9): # cycles through each square in the grid
+                if inp_grid[y] == win_con_array[x][y] == 1:
+                    win_counter_X += 1
+
+                    if win_counter_X == 3: # returns wincon as soon as three Xs are found in the right positions
+                        return 1
+
+                if inp_grid[y] == -win_con_array[x][y] == -1:
+                    win_counter_O += 1
+
+                    if win_counter_O == 3: # returns wincon as soon as three Xs are found in the right positions
+                        return -1
+
+        return None
+
+
+    # after every move, checks if either player has won. If neither player has won and all squares are filled, declares a draw.
+    def check_for_end():
+
+        def return_win(sign):
+            if sign == 1:
+                value = "X"
+            else:
+                value = "O"
+
+            print("Congrats to " + value + " for winning!")
+            query_new_game()
+
+        def query_new_game():
+            print("Do you want to play again? Y/N")
+
+            reference_responses = ["Y", "N", "y", "n"]
+            user_input = input()
+            user_input = user_input.replace(" ", "")
+
+            if user_input not in reference_responses:
+                print ("Try again.")
+                query_new_game()
+
+            if user_input == "Y" or user_input == "y":
+                print_board_from_array(grid)
+                start(grid, possible_moves, inp_turn_count)
+
+            elif user_input == "N" or user_input == "n":
+                print("Thanks for playing!")
+                sys.exit()
+
+        # RUNS THE CODE (check_for_end)
+        win_value = calc_win(current_grid)
+        if win_value is not None:
+            return_win(win_value)
+
+        if not current_possible_moves:
+            print("The game has ended in a draw!")
+            query_new_game()
+
+    # RUNS THE CODE (start)
+    current_grid = inp_grid.copy()
+    current_possible_moves = inp_possible_moves.copy()
+
+    if two_player:
+        print("It is player 1's turn:")
+        gen_user_move(True)
+        print("It is player 2's turn:")
+        gen_user_move(False)
+
+        inp_turn_count += 1
+        start(current_grid, current_possible_moves, inp_turn_count)
+
+    elif player_move_to_start:
+        print("It is the player's turn:")
+        gen_user_move(True)
+        print("It is the AI's turn:")
+        gen_AI_move(False)
+
+        inp_turn_count += 1
+        start(current_grid, current_possible_moves, inp_turn_count)
+
+    else:
+        print("It is the AI's turn:")
+        gen_AI_move(True)
+        print("It is the player's turn:")
+        gen_user_move(False)
+
+        inp_turn_count += 1
+        start(current_grid, current_possible_moves, inp_turn_count)
+
+
+######## RUNS THE CODE ########
+
+# init variables
+sleep_time = 0.7
+possible_moves = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+corner_moves = [0, 2, 4, 6, 8]
+centre_move = 4
+
+grid = [
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0] # generate the board as an array of 0s
+
+win_con_array = [
+    [1, 1, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 1, 1],
+    [1, 0, 0, 1, 0, 0, 1, 0, 0],
+    [0, 1, 0, 0, 1, 0, 0, 1, 0],
+    [0, 0, 1, 0, 0, 1, 0, 0, 1],
+    [1, 0, 0, 0, 1, 0, 0, 0, 1],
+    [0, 0, 1, 0, 1, 0, 1, 0, 0]] # array of all the possible win-conditions for a player.
+
+turn_count = 0
+
+# change these variables to change the modes
+two_player = False
+player_move_to_start = True # only relevant in matches against the AI.
+starting_sign = 1 # set to 1 to start with X, or to -1 to start with O.
+AI_difficulty = 2 # set to 0 for novice, 1 for intermediate, 2 for expert (unbeatable)
+
+# prints the instructions for the game
+if two_player:
+    input_text = "This game, you are playing with two players."
+elif player_move_to_start:
+    input_text = "This game, it is your turn to start."
+else:
+    input_text = "This game, it is the AI's turn to start."
+
+print("\n")
+print("When it is your turn, use the numpad keys (1-9) to pick a square. Each key corresponds to the square in the relevant position.")
+print("Type end to end the game.")
+print(input_text)
+print("\n")
+
+# print the empty board from the array
+print_board_from_array(grid)
+
+# run the main function of code. Recall until a player wins
+start(grid, possible_moves, turn_count)
