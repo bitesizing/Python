@@ -1,4 +1,7 @@
 import math
+import sys
+
+# sys.setrecursionlimit(10000000)
 
 def is_prime(m_input, prime_array): #checks if the input is prime
     sqrt_input = int(math.sqrt(m_input)) #sqrts input
@@ -27,6 +30,8 @@ def is_prime(m_input, prime_array): #checks if the input is prime
                     print(str(current) + " is prime. It has been added to the array.")
 
                 prime_array.append(current)
+                with open("prime_array.txt", "a") as f:
+                    f.writelines(", " + str(current))
                 if m_input % current == 0: # checks input against the new prime
                     return False
 
@@ -64,21 +69,31 @@ def return_prime_index(prime_index):
     current = prime_array[-1] + 1
 
     def call(current):
-        # print(len(prime_array))
-        # print(prime_index)
+
         print(current)
 
         if len(prime_array) < prime_index:
             if is_prime(current, prime_array):
-                current += 1
-                call(current)
-            else:
-                current += 1
-                call(current)
+                prime_array.append(current)
+            current += 1
+            call(current)
 
     call(current)
     print("The " + str(prime_index) + value + " prime is " + str(prime_array[prime_index-1]) + "!")
 
-return_prime_index(4)
+def update_array(file, m_array):
+    with open(file) as f:
+        var = f.readlines()
 
-## TO FIX: CURRENTLY THE ARRAY ONLY HANDLES SQUARE ROOTS OF PRIMES. This makes it maaaaassively inefficient.
+    var = str(var)
+    for character in "[], '": # replaces each of: ',[] and whitespace with nothing
+        var = var.replace(character, '')
+
+    local_array = []
+    for x in var:
+        local_array.append(int(x))
+
+    m_array = local_array.copy()
+
+prime_array = [2, 3, 5]
+is_prime(203, prime_array)
